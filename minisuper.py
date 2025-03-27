@@ -69,7 +69,7 @@ inventario = {
 def imprimirProductos(title:str, products:dict):
     os.system("cls" if os.name == "nt" else 'clear')
     table = Table(title=f"Productos de {title}")
-    table.add_column("Producto", justify="left", style="green")
+    table.add_column("Producto", justify="left", style="white")
     table.add_column("Cantidad", justify="center", style="blue")
     table.add_column("Precio", justify="center", style="blue")
 
@@ -145,6 +145,43 @@ def agregarDescuento():
     discount_question = inquirer.prompt([inquirer.Text('value', "Ingrese su nuevo descuento: ")])
     discount = int(discount_question['value'])
 
+def procederAlPago():
+    global carrito_personal
+    os.system('cls' if os.name == 'nt' else 'clear')
+    table = Table(title="Canasta personal")
+    table.add_column("Productos", justify="left", style="white")
+    table.add_column("Cantidad", justify="center", style="blue")
+    table.add_column("Precio", justify="center",style="blue")
+    table.add_column("Subtotal", justify="center", style="green")
+    subTotal = 0
+
+    for product, data in carrito_personal.items():
+        productSubTotal = int(data['Cantidad']) * float(data['Precio'])
+        subTotal += productSubTotal
+        table.add_row(product, str(data['Cantidad']), f"{data['Precio']} lps", f"{productSubTotal} lps")
+    
+    console.print(table)
+    console.print(f"[bold]SubTotal:[/bold] {subTotal} lps")
+    subTotalDiscount = subTotal * (discount / 100)
+    subTotal -= subTotalDiscount
+    console.print(f"[bold][green]Descuento {discount}%:[/green][/bold] {subTotalDiscount} lps")
+    taxes = subTotal * 0.15
+    total = subTotal + taxes
+    console.print(f"[bold][red]Impuestos:[/red][/bold] {taxes} lps")
+    console.print(f"[bold]Total:[/bold] {total} lps")
+    
+    console.print('[bold]Desea continuar con el pago?[/bold]')
+    continuePayment = inquirer.prompt([inquirer.Confirm("confirm")])
+    if (not continuePayment['confirm']):
+        return
+    
+    console.print("[bold][green]Se ha completado el pago con exito[/green][/bold]")
+    for product, data in carrito_personal.items():
+        inventario[data['Category']][product]['Cantidad'] -= int(data['Cantidad'])
+    
+    carrito_personal = {}
+    input("Presione enter para continuar")
+
 def sistemaMinisuper(subProgramIsRunning):
     while subProgramIsRunning:
         os.system("cls" if os.name == "nt" else "clear")
@@ -192,3 +229,5 @@ def sistemaMinisuper(subProgramIsRunning):
             agregarAlCarrito()
         elif (seleccion == 9):
             agregarDescuento()
+        else:
+            procederAlPago()
